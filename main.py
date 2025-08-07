@@ -1,4 +1,4 @@
-from os import getenv, environ
+import os
 import telebot
 from flask import Flask, request
 
