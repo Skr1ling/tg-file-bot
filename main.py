@@ -28,3 +28,13 @@ def handle_file(message):
 # Старт Flask-сервера
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
+@app.route("/upload", methods=["POST"])
+def manual_upload():
+    file = request.files.get("file")
+    if file:
+        chat_id = os.getenv("696743488")  # Укажи свой Chat ID в переменных окружения
+        bot.send_message(chat_id, "Файл получен вручную, пересылаю...")
+        bot.send_document(chat_id, file)
+        return "Файл отправлен", 200
+    return "Файл не найден", 400
