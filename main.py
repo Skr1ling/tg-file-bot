@@ -8,7 +8,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
 # Принимает сообщения от Telegram
-@app.route(f"/{BOT_TOKEN}", methods=["POST"])
+@app.route("/send_file", methods=["POST"])
 def telegram_webhook():
     update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
     bot.process_new_updates([update])
