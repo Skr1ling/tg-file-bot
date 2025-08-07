@@ -33,7 +33,7 @@ if __name__ == "__main__":
 def manual_upload():
     file = request.files.get("file")
     if file:
-        chat_id = os.getenv("696743488")  # Укажи свой Chat ID в переменных окружения
+        chat_id = os.getenv("MY_CHAT_ID")  # Укажи свой Chat ID в переменных окружения
         bot.send_message(chat_id, "Файл получен вручную, пересылаю...")
         bot.send_document(chat_id, file)
         return "Файл отправлен", 200
