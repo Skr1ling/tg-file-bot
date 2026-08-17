@@ -1,0 +1,57 @@
+name: Build Jerichonia APK
+
+on:
+  push:
+    branches: [jerichonia-apk-build]
+    paths:
+      - 'jerichonia-native-apk/**'
+      - '.github/workflows/jerichonia-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 9.5
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Ensure Android API 36
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Build debug APK
+        working-directory: jerichonia-native-apk
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          APK="jerichonia-native-apk/app/build/outputs/apk/debug/app-debug.apk"
+          test -f "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | head -20
+          mkdir -p artifact
+          cp "$APK" artifact/Jerichonia-VS01-Android.apk
+          sha256sum artifact/Jerichonia-VS01-Android.apk > artifact/SHA256.txt
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Jerichonia-VS01-Android
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 7
