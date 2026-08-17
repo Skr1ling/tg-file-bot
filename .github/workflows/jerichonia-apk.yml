@@ -8,6 +8,9 @@ on:
       - '.github/workflows/jerichonia-apk.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -42,10 +45,24 @@ jobs:
           APK="jerichonia-native-apk/app/build/outputs/apk/debug/app-debug.apk"
           test -f "$APK"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | head -20
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | tee artifact_badging.txt
           mkdir -p artifact
           cp "$APK" artifact/Jerichonia-VS01-Android.apk
           sha256sum artifact/Jerichonia-VS01-Android.apk > artifact/SHA256.txt
+          cp artifact_badging.txt artifact/APK_BADGING.txt
+
+      - name: Publish APK to build branch
+        shell: bash
+        run: |
+          mkdir -p public-builds
+          cp artifact/Jerichonia-VS01-Android.apk public-builds/Jerichonia-VS01-Android.apk
+          cp artifact/SHA256.txt public-builds/SHA256.txt
+          cp artifact/APK_BADGING.txt public-builds/APK_BADGING.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public-builds/
+          git commit -m "Publish Jerichonia VS01 APK" || true
+          git push origin HEAD:jerichonia-apk-build
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
